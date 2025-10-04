@@ -8,7 +8,8 @@
 $(call inherit-product, hardware/qcom-caf/common/common.mk)
 
 # A/B
-ifeq ($(TARGET_AB_DEVICE),true)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota.mk)
+
 AB_OTA_POSTINSTALL_CONFIG += \
     RUN_POSTINSTALL_system=true \
     POSTINSTALL_PATH_system=system/bin/otapreopt_script \
@@ -24,7 +25,8 @@ AB_OTA_POSTINSTALL_CONFIG += \
 PRODUCT_PACKAGES += \
     checkpoint_gc \
     otapreopt_script
-endif
+
+PRODUCT_VENDOR_PROPERTIES += ro.virtual_ab.compression.threads=true
 
 # Audio
 PRODUCT_PACKAGES += \
@@ -53,6 +55,8 @@ PRODUCT_PACKAGES += \
     libvolumelistener
 
 AUDIO_HAL_DIR := hardware/qcom-caf/sm8250/audio
+
+TARGET_EXCLUDES_AUDIOFX := true
 
 PRODUCT_COPY_FILES += \
     $(AUDIO_HAL_DIR)/configs/kona/audio_platform_info.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_platform_info.xml \
@@ -101,7 +105,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.camera.full.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.full.xml \
     frameworks/native/data/etc/android.hardware.camera.raw.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.raw.xml
 
-$(call soong_config_set,libcameraservice,ext_lib,//$(LOCAL_PATH):libcameraservice_extension.realme_sm8250)
+$(call soong_config_set,libcameraservice,ext_lib,//$(LOCAL_PATH):libcameraservice_extension.oneplus_sm8250)
 
 # Dalvik
 $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
@@ -112,6 +116,12 @@ PRODUCT_SET_DEBUGFS_RESTRICTIONS := true
 # Device ID attestation
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.software.device_id_attestation.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.device_id_attestation.xml
+
+# Device-specific settings
+PRODUCT_PACKAGES += \
+    DSPVolumeSynchronizer \
+    RealmeAddons
+
 
 # Display
 PRODUCT_PACKAGES += \
@@ -199,9 +209,6 @@ PRODUCT_PACKAGES += \
 
 $(call soong_config_set,libinit,vendor_init_lib,//$(LOCAL_PATH):libinit_oplus)
 
-# Kernel
-PRODUCT_ENABLE_UFFD_GC := true
-
 # Lineage Health
 PRODUCT_PACKAGES += \
     vendor.lineage.health-service.default
@@ -254,9 +261,6 @@ PRODUCT_PACKAGES += \
     OPlusSystemUIResCommon \
     WifiResTarget
 
-# Oplus Camera
-$(call inherit-product-if-exists, vendor/oplus/camera/opluscamera.mk)
-
 # Partitions
 PRODUCT_PACKAGES += \
     vendor_bt_firmware_mountpoint \
@@ -274,6 +278,9 @@ $(call soong_config_set,qtipower,tap_to_wake_node,/proc/touchpanel/double_tap_en
 # QTI fwk-detect
 PRODUCT_PACKAGES += \
     libvndfwk_detect_jni.qti.vendor # Needed by CNE app
+
+# UFFD GC
+OVERRIDE_ENABLE_UFFD_GC := false
 
 # Sensors
 PRODUCT_PACKAGES += \
@@ -347,6 +354,12 @@ PRODUCT_PACKAGES += \
     android.hardware.usb.gadget-service.qti \
     oplus_usb_compositions.conf
 
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.sys.usb.config=mtp,adb \
+    ro.adb.secure=0 \
+    ro.secure=0 \
+    ro.debuggable=1
+
 PRODUCT_SOONG_NAMESPACES += \
     vendor/qcom/opensource/usb/etc
 
@@ -395,5 +408,8 @@ PRODUCT_PACKAGES += \
     firmware_wlan_mac.bin_symlink \
     firmware_WCNSS_qcom_cfg.ini_symlink
 
+# Blur
+TARGET_ENABLE_BLUR := true
+
 # Inherit from the proprietary files makefile.
-$(call inherit-product, vendor/realme/sm8250-common/sm8250-common-vendor.mk)
+$(call inherit-product, vendor/oneplus/sm8250-common/sm8250-common-vendor.mk)
